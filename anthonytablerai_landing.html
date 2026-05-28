@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AnthonyTablerAI — Never Miss Another Lead</title>
+<meta name="description" content="AI receptionist for real estate agents. Find out what missed calls are costing you — then fix it in 7 days.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+
+/* ═══ TOKENS ═══ */
+:root {
+  --black: #040403;
+  --s1: #090908;
+  --s2: #0E0E0D;
+  --s3: #141413;
+  --border: #1E1E1C;
+  --border2: #2A2A27;
+  --gold: #C8A84B;
+  --gold-b: #E4BE66;
+  --gold-c: #F5D78A;
+  --gold-dim: rgba(200,168,75,.06);
+  --gold-mid: rgba(200,168,75,.12);
+  --gold-glow: rgba(200,168,75,.22);
+  --text: #F6F6F0;
+  --muted: #9A9A90;
+  --dim: #4E4E49;
+  --green: #7EC49A;
+  --red: #D96B6B;
+}
+
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--black);
+  color: var(--text);
+  font-family: 'Outfit', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+a { text-decoration:none; color:inherit; }
+
+/* ═══ CURSOR GLOW ═══ */
+#cursor-glow {
+  position: fixed;
+  width: 500px; height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(200,168,75,.055) 0%, transparent 65%);
+  pointer-events: none;
+  transform: translate(-50%,-50%);
+  z-index: 0;
+  transition: left .08s linear, top .08s linear;
+  will-change: left, top;
+}
+
+/* ═══ NOISE ═══ */
+#noise {
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9998;
+  opacity: .7;
+}
+
+/* ═══ NAV ═══ */
+nav {
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  z-index: 9000;
+  height: 60px;
+  padding: 0 max(20px, 4.5vw);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(4,4,3,.7);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border-bottom: 1px solid rgba(200,168,75,.08);
+  transition: background .4s;
+}
+nav.scrolled { background: rgba(4,4,3,.92); }
+.logo {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 14px;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.logo-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 10px var(--gold-glow);
+  animation: logo-pulse 2.4s ease-in-out infinite;
+}
+@keyframes logo-pulse {
+  0%,100%{box-shadow:0 0 6px var(--gold-glow);}
+  50%{box-shadow:0 0 18px var(--gold-glow),0 0 36px rgba(200,168,75,.08);}
+}
+.nav-right { display:flex; align-items:center; gap:16px; }
+.nav-link {
+  font-size: 13px;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  transition: color .2s;
+  display: none;
+}
+@media(min-width:600px){ .nav-link { display:block; } }
+.nav-link:hover { color: var(--gold); }
+.nav-btn {
+  background: var(--gold);
+  color: #040403;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  letter-spacing: .04em;
+  padding: 9px 22px;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  transition: all .22s;
+  white-space: nowrap;
+}
+.nav-btn:hover { background:var(--gold-b); transform:translateY(-1px); box-shadow:0 6px 24px rgba(200,168,75,.25); }
+
+/* ═══ HERO ═══ */
+.hero {
+  min-height: 100svh;
+  padding: 120px max(20px,5vw) 80px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* Animated gradient orbs */
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  filter: blur(80px);
+}
+.orb-1 {
+  width: 700px; height: 700px;
+  top: -200px; right: -150px;
+  background: radial-gradient(circle, rgba(200,168,75,.07) 0%, transparent 70%);
+  animation: orb-drift 14s ease-in-out infinite alternate;
+}
+.orb-2 {
+  width: 400px; height: 400px;
+  bottom: -100px; left: -100px;
+  background: radial-gradient(circle, rgba(200,168,75,.05) 0%, transparent 70%);
+  animation: orb-drift 18s ease-in-out infinite alternate-reverse;
+}
+@keyframes orb-drift {
+  0%{transform:translate(0,0) scale(1);}
+  100%{transform:translate(30px,20px) scale(1.08);}
+}
+
+/* Grid lines */
+.hero-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(200,168,75,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(200,168,75,.04) 1px, transparent 1px);
+  background-size: 72px 72px;
+  mask-image: radial-gradient(ellipse 80% 80% at 50% 40%, black 20%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 80% 80% at 50% 40%, black 20%, transparent 100%);
+}
+
+/* Ghost number */
+.hero-ghost {
+  position: absolute;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(180px, 28vw, 340px);
+  color: rgba(200,168,75,.03);
+  top: 50%; left: 50%;
+  transform: translate(-40%, -50%);
+  pointer-events: none;
+  white-space: nowrap;
+  letter-spacing: -.02em;
+  user-select: none;
+}
+
+.hero-inner {
+  position: relative;
+  max-width: 1100px;
+  z-index: 2;
+}
+
+.hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(200,168,75,.07);
+  border: 1px solid rgba(200,168,75,.18);
+  border-radius: 100px;
+  padding: 6px 16px 6px 10px;
+  margin-bottom: 36px;
+}
+.hero-eyebrow-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--gold);
+  box-shadow: 0 0 8px var(--gold-glow);
+}
+.hero-eyebrow span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+
+.hero-headline {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px, 8.5vw, 112px);
+  line-height: .95;
+  letter-spacing: .01em;
+  margin-bottom: 32px;
+  overflow: hidden;
+}
+.hero-headline .line {
+  display: block;
+  overflow: hidden;
+}
+.hero-headline .line-inner {
+  display: block;
+  transform: translateY(110%);
+  animation: line-up .9s cubic-bezier(.16,1,.3,1) forwards;
+}
+.hero-headline .line:nth-child(2) .line-inner { animation-delay: .12s; }
+.hero-headline .line:nth-child(3) .line-inner { animation-delay: .24s; }
+.hero-headline .gold { color: var(--gold); }
+
+.hero-sub {
+  font-size: clamp(16px, 1.7vw, 20px);
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 560px;
+  margin-bottom: 44px;
+  font-weight: 300;
+  opacity: 0;
+  animation: fade-up .8s ease .5s forwards;
+}
+.hero-sub strong { color: var(--text); font-weight: 500; }
+
+@keyframes line-up {
+  to { transform: translateY(0); }
+}
+@keyframes fade-up {
+  from { opacity:0; transform:translateY(16px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+.hero-actions {
+  display: flex;
+  gap: 14px;
+  flex-wrap: wrap;
+  opacity: 0;
+  animation: fade-up .8s ease .7s forwards;
+}
+
+.btn-primary {
+  background: var(--gold);
+  color: #040403;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 16px 34px;
+  border-radius: 100px;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all .22s;
+  letter-spacing: .01em;
+  font-family: 'Outfit', sans-serif;
+}
+.btn-primary:hover { background:var(--gold-b); transform:translateY(-2px); box-shadow:0 14px 48px rgba(200,168,75,.3); }
+
+.btn-ghost {
+  color: var(--text);
+  font-weight: 500;
+  font-size: 15px;
+  padding: 16px 34px;
+  border-radius: 100px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: all .22s;
+  font-family: 'Outfit', sans-serif;
+}
+.btn-ghost:hover { border-color: rgba(200,168,75,.3); background: var(--gold-dim); color: var(--gold-b); }
+
+/* Live counter badge */
+.live-badge {
+  position: absolute;
+  bottom: 48px;
+  right: max(20px,5vw);
+  background: rgba(9,9,8,.85);
+  border: 1px solid rgba(200,168,75,.2);
+  border-radius: 14px;
+  padding: 14px 20px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  max-width: 280px;
+  opacity: 0;
+  animation: fade-up .8s ease 1.2s forwards;
+  z-index: 2;
+}
+.live-badge-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 6px;
+}
+.live-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--red);
+  box-shadow: 0 0 8px rgba(217,107,107,.6);
+  animation: blink-red 1.4s ease-in-out infinite;
+}
+@keyframes blink-red { 0%,100%{opacity:1} 50%{opacity:.3} }
+.live-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--red);
+}
+.live-body {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.live-body strong { color: var(--text); font-weight: 500; font-size: 15px; }
+
+/* ═══ TICKER ═══ */
+.ticker {
+  background: var(--s1);
+  border-top: 1px solid rgba(200,168,75,.1);
+  border-bottom: 1px solid rgba(200,168,75,.1);
+  overflow: hidden;
+  padding: 14px 0;
+  position: relative;
+}
+.ticker::before, .ticker::after {
+  content: '';
+  position: absolute;
+  top: 0; bottom: 0;
+  width: 80px;
+  z-index: 2;
+}
+.ticker::before { left:0; background:linear-gradient(90deg,var(--s1),transparent); }
+.ticker::after  { right:0; background:linear-gradient(-90deg,var(--s1),transparent); }
+.ticker-track {
+  display: flex;
+  white-space: nowrap;
+  animation: ticker-scroll 40s linear infinite;
+  width: max-content;
+}
+.ticker-track:hover { animation-play-state: paused; }
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 32px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.ticker-item .t-num { color: var(--gold); font-weight: 500; }
+.ticker-sep { color: var(--dim); }
+@keyframes ticker-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
+/* ═══ COST SECTION ═══ */
+.cost-section {
+  padding: 110px max(20px,5vw);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+  background: var(--black);
+}
+.cost-grid-bg {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--border) 1px, transparent 1px),
+    linear-gradient(90deg, var(--border) 1px, transparent 1px);
+  background-size: 56px 56px;
+  opacity: .3;
+  mask-image: radial-gradient(ellipse 60% 80% at 50% 50%, black, transparent);
+  -webkit-mask-image: radial-gradient(ellipse 60% 80% at 50% 50%, black, transparent);
+}
+.cost-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 24px;
+  position: relative;
+}
+.cost-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(80px,16vw,200px);
+  color: var(--gold);
+  letter-spacing: -.01em;
+  line-height: 1;
+  margin-bottom: 20px;
+  position: relative;
+  text-shadow: 0 0 120px rgba(200,168,75,.15);
+}
+.cost-desc {
+  font-size: clamp(16px,1.8vw,20px);
+  color: var(--muted);
+  max-width: 560px;
+  margin: 0 auto 40px;
+  line-height: 1.7;
+  font-weight: 300;
+  position: relative;
+}
+.cost-desc strong { color: var(--text); font-weight: 500; }
+.cost-cta-hint {
+  font-size: 14px;
+  color: var(--dim);
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  position: relative;
+}
+
+/* Stat row */
+.stat-row {
+  display: flex;
+  justify-content: center;
+  gap: 1px;
+  background: var(--border);
+  border-radius: 18px;
+  overflow: hidden;
+  max-width: 800px;
+  margin: 64px auto 0;
+  position: relative;
+}
+.stat-block {
+  flex: 1;
+  background: var(--s1);
+  padding: 36px 24px;
+  text-align: center;
+  transition: background .3s;
+}
+.stat-block:hover { background: var(--s2); }
+.stat-block .s-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(44px,5vw,64px);
+  color: var(--gold);
+  letter-spacing: .01em;
+  line-height: 1;
+  margin-bottom: 10px;
+}
+.stat-block .s-txt {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.55;
+  font-weight: 300;
+}
+.stat-block .s-txt strong { color: var(--text); font-weight: 500; }
+
+/* ═══ CALCULATOR ═══ */
+.calc-section {
+  padding: 100px max(20px,5vw);
+  background: var(--s1);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.calc-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 72px;
+  align-items: start;
+}
+.section-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.section-tag::before { content:''; width:20px; height:1px; background:var(--gold); }
+
+.calc-h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(44px,5.5vw,68px);
+  letter-spacing: .01em;
+  line-height: .95;
+  margin-bottom: 18px;
+}
+.calc-h2 .g { color: var(--gold); }
+.calc-p {
+  font-size: 16px;
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 36px;
+  font-weight: 300;
+}
+.calc-p strong { color: var(--text); font-weight: 500; }
+
+/* Sliders */
+.slider-wrap { margin-bottom: 24px; }
+.slider-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+.s-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.s-val {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text);
+}
+input[type=range] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 2px;
+  background: var(--border2);
+  outline: none;
+  border-radius: 2px;
+  cursor: pointer;
+}
+input[type=range].amber::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--gold);
+  cursor: pointer; border: none;
+  box-shadow: 0 0 0 4px rgba(200,168,75,.12), 0 0 16px rgba(200,168,75,.2);
+  transition: box-shadow .15s;
+}
+input[type=range].amber:active::-webkit-slider-thumb {
+  box-shadow: 0 0 0 7px rgba(200,168,75,.15), 0 0 24px rgba(200,168,75,.25);
+}
+input[type=range].green::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px; height: 20px;
+  border-radius: 50%;
+  background: var(--green);
+  cursor: pointer; border: none;
+  box-shadow: 0 0 0 4px rgba(126,196,154,.12);
+}
+
+/* Result glass card */
+.result-glass {
+  background: rgba(14,14,13,.7);
+  border: 1px solid rgba(200,168,75,.15);
+  border-radius: 24px;
+  padding: 36px;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  position: sticky;
+  top: 90px;
+  box-shadow: 0 0 0 1px rgba(200,168,75,.04), inset 0 1px 0 rgba(255,255,255,.04);
+}
+.result-glass::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 25%; right: 25%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(200,168,75,.35), transparent);
+}
+
+.view-row {
+  display: flex;
+  gap: 4px;
+  background: var(--s3);
+  padding: 4px;
+  border-radius: 100px;
+  border: 1px solid var(--border);
+  margin-bottom: 28px;
+  width: fit-content;
+}
+.v-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  padding: 6px 18px;
+  border-radius: 100px;
+  cursor: pointer;
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  transition: all .2s;
+}
+.v-btn.on {
+  background: var(--gold-dim);
+  border: 1px solid rgba(200,168,75,.22);
+  color: var(--gold);
+}
+
+.r-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .15em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.r-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(60px,8vw,88px);
+  color: var(--gold);
+  letter-spacing: .01em;
+  line-height: 1;
+  margin-bottom: 4px;
+  transition: transform .2s ease;
+  text-shadow: 0 0 60px rgba(200,168,75,.15);
+}
+.r-num.pop { transform: scale(1.04); }
+.r-per {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 4px;
+}
+.r-sub { font-size: 13px; color: var(--dim); font-family:'JetBrains Mono',monospace; margin-bottom:8px; }
+.r-closing { font-size: 14px; color: var(--red); font-style: italic; min-height: 22px; margin-bottom:22px; line-height:1.4; }
+
+.mini-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+.mini-card {
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.mc-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 6px;
+}
+.mc-val {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 32px;
+  color: var(--red);
+  letter-spacing: .02em;
+  line-height: 1;
+}
+
+.rec-block {
+  background: var(--s3);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 24px;
+}
+.rec-top {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+.rec-top span { color: var(--text); font-weight: 500; }
+.rec-result {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-top: 12px;
+}
+.rec-num {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 40px;
+  color: var(--green);
+  letter-spacing: .02em;
+  line-height: 1;
+}
+.rec-hint { font-size: 12px; color: var(--muted); line-height: 1.4; text-align: right; max-width: 110px; }
+
+/* Demo CTA in calc */
+.calc-demo {
+  text-align: center;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+.phone-tap {
+  display: inline-block;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(30px,4vw,46px);
+  letter-spacing: .04em;
+  color: var(--gold);
+  padding: 12px 40px;
+  border: 1px solid rgba(200,168,75,.22);
+  border-radius: 100px;
+  background: var(--gold-dim);
+  margin-bottom: 8px;
+  transition: all .22s;
+  animation: ring-pulse 2.8s ease-out infinite;
+}
+@keyframes ring-pulse {
+  0%{box-shadow:0 0 0 0 rgba(200,168,75,.35);}
+  70%{box-shadow:0 0 0 18px rgba(200,168,75,0);}
+  100%{box-shadow:0 0 0 0 rgba(200,168,75,0);}
+}
+.phone-tap:hover { background:rgba(200,168,75,.13); transform:scale(1.02); box-shadow:0 0 50px rgba(200,168,75,.18); }
+.phone-note {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .1em;
+  color: var(--dim);
+  text-transform: uppercase;
+}
+
+/* ═══ HOW IT WORKS ═══ */
+.how-section {
+  padding: 100px max(20px,5vw);
+  background: var(--black);
+}
+.how-inner { max-width: 1120px; margin: 0 auto; }
+.how-h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(48px,6vw,76px);
+  letter-spacing: .01em;
+  line-height: .95;
+  margin-bottom: 14px;
+}
+.how-h2 .g { color: var(--gold); }
+.how-sub { font-size: 17px; color: var(--muted); margin-bottom: 60px; font-weight:300; max-width:560px; }
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  background: var(--border);
+  border-radius: 22px;
+  overflow: hidden;
+}
+.step-card {
+  background: var(--s1);
+  padding: 44px 32px;
+  position: relative;
+  transition: background .3s;
+}
+.step-card:hover { background: var(--s2); }
+.step-n {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .15em;
+  color: var(--gold);
+  text-transform: uppercase;
+  margin-bottom: 22px;
+}
+.step-icon-box {
+  width: 52px; height: 52px;
+  background: var(--gold-dim);
+  border: 1px solid rgba(200,168,75,.18);
+  border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px;
+  margin-bottom: 22px;
+}
+.step-card h3 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 28px;
+  letter-spacing: .02em;
+  line-height: 1.1;
+  margin-bottom: 14px;
+}
+.step-card p {
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1.7;
+  font-weight: 300;
+}
+.step-card p strong { color: var(--text); font-weight: 500; }
+.step-card:not(:last-child)::after {
+  content: '→';
+  position: absolute;
+  right: -17px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 16px;
+  color: var(--gold);
+  background: var(--black);
+  width: 34px; height: 34px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  border: 1px solid rgba(200,168,75,.22);
+  z-index: 2;
+}
+
+/* ═══ DEMO SECTION ═══ */
+.demo-section {
+  padding: 100px max(20px,5vw);
+  background: var(--s1);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.demo-bg-num {
+  position: absolute;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(120px,20vw,260px);
+  color: rgba(200,168,75,.025);
+  top: 50%; left: 50%;
+  transform: translate(-50%,-50%);
+  pointer-events: none;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.demo-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 28px;
+  position: relative;
+}
+.demo-tag::before,.demo-tag::after { content:''; width:40px; height:1px; background:var(--gold); }
+.demo-h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px,7vw,88px);
+  line-height: .95;
+  letter-spacing: .01em;
+  margin-bottom: 20px;
+  position: relative;
+}
+.demo-h2 .g { color: var(--gold); }
+.demo-sub {
+  font-size: 17px;
+  color: var(--muted);
+  line-height: 1.7;
+  max-width: 500px;
+  margin: 0 auto 52px;
+  font-weight: 300;
+  position: relative;
+}
+.big-phone {
+  display: inline-block;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(48px, 9vw, 96px);
+  letter-spacing: .04em;
+  color: var(--gold);
+  padding: 18px 60px;
+  border: 1px solid rgba(200,168,75,.22);
+  border-radius: 120px;
+  background: var(--gold-dim);
+  margin-bottom: 14px;
+  transition: all .22s;
+  position: relative;
+  animation: ring-pulse 2.5s ease-out infinite;
+  line-height: 1;
+}
+.big-phone:hover { background: rgba(200,168,75,.12); transform:scale(1.02); box-shadow:0 0 80px rgba(200,168,75,.18); }
+.call-hint {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--dim);
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  margin-bottom: 44px;
+  position: relative;
+}
+.script-card {
+  max-width: 480px;
+  margin: 0 auto;
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: 18px;
+  padding: 24px 28px;
+  text-align: left;
+  position: relative;
+}
+.script-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+.script-card p {
+  font-size: 15px;
+  color: var(--muted);
+  line-height: 1.65;
+}
+.script-card em { color: var(--text); font-style: normal; font-weight: 500; }
+
+/* ═══ OFFER ═══ */
+.offer-section {
+  padding: 100px max(20px,5vw);
+  background: var(--black);
+}
+.offer-inner {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 64px;
+  align-items: start;
+}
+.offer-h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(48px,5.5vw,72px);
+  letter-spacing: .01em;
+  line-height: .95;
+  margin-bottom: 20px;
+}
+.offer-h2 .g { color: var(--gold); }
+.offer-body {
+  font-size: 17px;
+  color: var(--muted);
+  line-height: 1.8;
+  margin-bottom: 36px;
+  font-weight: 300;
+}
+.offer-body strong { color: var(--text); font-weight: 500; }
+
+.price-card {
+  background: var(--s2);
+  border: 1px solid var(--border2);
+  border-radius: 24px;
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+}
+.price-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 25%; right: 25%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(200,168,75,.3), transparent);
+}
+.price-main {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 80px;
+  letter-spacing: -.01em;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+.price-main sup { font-size: 32px; vertical-align: top; margin-top: 14px; display: inline-block; color: var(--muted); }
+.price-per { font-size: 13px; color: var(--muted); margin-bottom: 28px; font-family:'JetBrains Mono',monospace; letter-spacing:.04em; }
+.feats { list-style: none; margin-bottom: 28px; }
+.feats li {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  font-size: 15px;
+  color: var(--muted);
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+  font-weight: 300;
+  line-height: 1.5;
+}
+.feats li:last-child { border-bottom: none; }
+.feats li::before { content:'✓'; color:var(--gold); font-weight:600; flex-shrink:0; font-family:'Outfit',sans-serif; }
+.trial-line {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: .04em;
+  margin-bottom: 20px;
+}
+.trial-line strong { color: var(--gold); }
+
+/* ═══ FINAL ═══ */
+.final-section {
+  padding: 110px max(20px,5vw);
+  background: var(--s1);
+  border-top: 1px solid var(--border);
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.final-bg {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 100%, rgba(200,168,75,.05) 0%, transparent 70%);
+}
+.final-h2 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(52px,7.5vw,100px);
+  letter-spacing: .01em;
+  line-height: .95;
+  margin-bottom: 20px;
+  max-width: 820px;
+  margin-left: auto;
+  margin-right: auto;
+  position: relative;
+}
+.final-h2 .g { color: var(--gold); }
+.final-sub {
+  font-size: 17px;
+  color: var(--muted);
+  margin-bottom: 48px;
+  font-weight: 300;
+  position: relative;
+}
+.btn-row {
+  display: flex;
+  gap: 14px;
+  justify-content: center;
+  flex-wrap: wrap;
+  position: relative;
+}
+
+/* ═══ FOOTER ═══ */
+footer {
+  padding: 32px max(20px,5vw);
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+.f-logo { font-family:'Outfit',sans-serif; font-weight:600; font-size:13px; display:flex; align-items:center; gap:8px; letter-spacing:.04em; text-transform:uppercase; }
+.f-copy { font-size:12px; color:var(--dim); font-family:'JetBrains Mono',monospace; letter-spacing:.05em; }
+.f-links { display:flex; gap:20px; }
+.f-links a { font-size:12px; color:var(--muted); font-family:'JetBrains Mono',monospace; letter-spacing:.06em; text-transform:uppercase; transition:color .2s; }
+.f-links a:hover { color:var(--gold); }
+
+/* ═══ REVEAL ═══ */
+.rv { opacity:0; transform:translateY(24px); transition:opacity .7s ease, transform .7s ease; }
+.rv.in { opacity:1; transform:translateY(0); }
+.rd1{transition-delay:.1s} .rd2{transition-delay:.2s} .rd3{transition-delay:.3s}
+
+/* ═══ RESPONSIVE ═══ */
+@media(max-width:900px) {
+  .calc-inner { grid-template-columns:1fr; }
+  .result-glass { position:static; }
+  .steps { grid-template-columns:1fr; }
+  .step-card:not(:last-child)::after { display:none; }
+  .offer-inner { grid-template-columns:1fr; }
+  .live-badge { display:none; }
+}
+@media(max-width:600px) {
+  nav { padding:0 16px; }
+  .hero, .cost-section, .calc-section, .how-section, .demo-section, .offer-section, .final-section { padding-left:16px; padding-right:16px; }
+  .btn-primary, .btn-ghost { width:100%; justify-content:center; }
+  .hero-actions { flex-direction:column; }
+  .btn-row { flex-direction:column; align-items:center; }
+  .big-phone { padding:14px 32px; }
+}
+</style>
+</head>
+<body>
+
+<div id="cursor-glow"></div>
+<div id="noise"></div>
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="logo"><div class="logo-dot"></div>AnthonyTablerAI</div>
+  <div class="nav-right">
+    <a href="#calculator" class="nav-link">Calculator</a>
+    <a href="tel:6142159218" class="nav-btn">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.66A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.18 6.18l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+      Try Demo
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="orb orb-1"></div>
+  <div class="orb orb-2"></div>
+  <div class="hero-grid"></div>
+  <div class="hero-ghost">$47K</div>
+
+  <div class="hero-inner">
+    <div class="hero-eyebrow">
+      <div class="hero-eyebrow-dot"></div>
+      <span>AI Receptionist · Real Estate · Columbus OH</span>
+    </div>
+
+    <h1 class="hero-headline">
+      <span class="line"><span class="line-inner">THE AGENT WHO</span></span>
+      <span class="line"><span class="line-inner gold">ANSWERED FIRST</span></span>
+      <span class="line"><span class="line-inner">IS CLOSING YOUR DEAL.</span></span>
+    </h1>
+
+    <p class="hero-sub">
+      You're not losing to the market. You're losing to <strong>whoever picked up the phone.</strong> We built the AI that picks up when you can't — qualifies the buyer and texts you the lead before you're off your showing.
+    </p>
+
+    <div class="hero-actions">
+      <a href="tel:6142159218" class="btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.66A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.18 6.18l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        Hear the Demo Free
+      </a>
+      <a href="https://www.instagram.com/anthonyt05/" target="_blank" class="btn-ghost">
+        Start 7-Day Free Trial
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+    </div>
+  </div>
+
+  <!-- Live counter -->
+  <div class="live-badge">
+    <div class="live-badge-top">
+      <div class="live-dot"></div>
+      <span class="live-label">Live Estimate</span>
+    </div>
+    <div class="live-body">Columbus agents have missed <strong id="live-count">0</strong> calls since you opened this page.</div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-track" id="ticker-track">
+    <span class="ticker-item"><span class="t-num">85%</span> of buyers who hit voicemail call the next agent <span class="ticker-sep">·</span></span>
+    <span class="ticker-item"><span class="t-num">21×</span> higher conversion when you answer in under 5 minutes <span class="ticker-sep">·</span></span>
+    <span class="ticker-item"><span class="t-num">$47K</span> average commission lost annually to missed calls <span class="ticker-sep">·</span></span>
+    <span class="ticker-item"><span class="t-num">40%</span> of inbound buyer calls go unanswered <span class="ticker-sep">·</span></span>
+    <span class="ticker-item"><span class="t-num">2 rings</span> — that's how fast the AI answers <span class="ticker-sep">·</span></span>
+    <span class="ticker-item"><span class="t-num">24/7</span> — every call. every time. no voicemail. <span class="ticker-sep">·</span></span>
+    <span class="ticker-item"><span class="t-num">$599</span>/month · 7-day free trial · no contract <span class="ticker-sep">·</span></span>
+    <span class="ticker-item"><span class="t-num">85%</span> of buyers who hit voicemail call the next agent <span class="ticker-sep">·</span></span>
+    <span class="ticker-item"><span class="t-num">21×</span> higher conversion when you answer in under 5 minutes <span class="ticker-sep">·</span></span>
+    <span class="ticker-item"><span class="t-num">$47K</span> average commission lost annually to missed calls <span class="ticker-sep">·</span></span>
+    <span class="ticker-item"><span class="t-num">40%</span> of inbound buyer calls go unanswered <span class="ticker-sep">·</span></span>
+    <span class="ticker-item"><span class="t-num">2 rings</span> — that's how fast the AI answers <span class="ticker-sep">·</span></span>
+    <span class="ticker-item"><span class="t-num">24/7</span> — every call. every time. no voicemail. <span class="ticker-sep">·</span></span>
+    <span class="ticker-item"><span class="t-num">$599</span>/month · 7-day free trial · no contract <span class="ticker-sep">·</span></span>
+  </div>
+</div>
+
+<!-- COST NUMBER -->
+<section class="cost-section">
+  <div class="cost-grid-bg"></div>
+  <div class="rv">
+    <p class="cost-eyebrow">Average annual commission lost to missed calls · Columbus, OH · 2026</p>
+    <div class="cost-num" id="cost-count">$47,000</div>
+    <p class="cost-desc">
+      That's not from slow markets or bad leads. That's from <strong>being in a showing when a buyer called.</strong> One recovered deal at the Columbus average covers over a year of the fix at $599/month.
+    </p>
+    <p class="cost-cta-hint">↓ Calculate your exact number below</p>
+  </div>
+  <div class="stat-row rv rd1">
+    <div class="stat-block">
+      <div class="s-num">85%</div>
+      <div class="s-txt">of callers who hit voicemail <strong>don't leave a message.</strong> They call the next agent.</div>
+    </div>
+    <div class="stat-block">
+      <div class="s-num">21×</div>
+      <div class="s-txt">more likely to convert when you respond <strong>within 5 minutes</strong> vs. 30.</div>
+    </div>
+    <div class="stat-block">
+      <div class="s-num">2 rings</div>
+      <div class="s-txt">That's how fast the AI answers. <strong>Every call. Every night.</strong> Every weekend.</div>
+    </div>
+  </div>
+</section>
+
+<!-- CALCULATOR -->
+<section class="calc-section" id="calculator">
+  <div class="calc-inner">
+    <!-- Left -->
+    <div class="rv">
+      <div class="section-tag">Your Numbers</div>
+      <h2 class="calc-h2">FIND OUT WHAT<br>YOU'RE <span class="g">ACTUALLY</span><br>LOSING.</h2>
+      <p class="calc-p">Most Columbus agents assume it's around $10K. <strong>The real number is closer to $47K</strong> — and it compounds every week you don't fix it.</p>
+
+      <div class="slider-wrap">
+        <div class="slider-top">
+          <span class="s-label">Average sale price</span>
+          <span class="s-val" id="sv-price">$290,000</span>
+        </div>
+        <input type="range" class="amber" id="sl-price" min="150000" max="800000" step="10000" value="290000" oninput="calc()">
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-top">
+          <span class="s-label">Buyer calls per week</span>
+          <span class="s-val" id="sv-calls">10 calls</span>
+        </div>
+        <input type="range" class="amber" id="sl-calls" min="2" max="30" step="1" value="10" oninput="calc()">
+      </div>
+      <div class="slider-wrap">
+        <div class="slider-top">
+          <span class="s-label">Missed during showings & off-hours</span>
+          <span class="s-val" id="sv-miss">40%</span>
+        </div>
+        <input type="range" class="amber" id="sl-miss" min="10" max="60" step="5" value="40" oninput="calc()">
+      </div>
+      <div class="slider-wrap" style="margin-top:28px;padding-top:24px;border-top:1px solid var(--border)">
+        <div class="slider-top">
+          <span class="s-label">Calls you could capture back</span>
+          <span class="s-val" id="sv-rec">50%</span>
+        </div>
+        <input type="range" class="green" id="sl-rec" min="10" max="100" step="10" value="50" oninput="calc()">
+      </div>
+    </div>
+
+    <!-- Right: result glass -->
+    <div class="rv rd1">
+      <div class="result-glass">
+        <div class="view-row">
+          <button class="v-btn on" id="vb-yr" onclick="setV('yr')">Annual</button>
+          <button class="v-btn" id="vb-mo" onclick="setV('mo')">Monthly</button>
+        </div>
+        <div class="r-label">Estimated commission slipping away</div>
+        <div class="r-num" id="r-loss">$0</div>
+        <div class="r-per" id="r-per">per year</div>
+        <div class="r-sub" id="r-sub"></div>
+        <div class="r-closing" id="r-closing"></div>
+        <div class="mini-grid">
+          <div class="mini-card">
+            <div class="mc-label">Deals lost / yr</div>
+            <div class="mc-val" id="r-deals">0</div>
+          </div>
+          <div class="mini-card">
+            <div class="mc-label">Missed calls / yr</div>
+            <div class="mc-val" id="r-missed">0</div>
+          </div>
+        </div>
+        <div class="rec-block">
+          <div class="rec-top">Recover <span id="r-rec-pct">50%</span> of those missed calls...</div>
+          <input type="range" class="green" id="sl-rec2" min="10" max="100" step="10" value="50" oninput="syncRec(this.value)" style="margin-bottom:0">
+          <div class="rec-result">
+            <div class="rec-num" id="r-rec">$0</div>
+            <div class="rec-hint" id="r-rec-hint">back per year</div>
+          </div>
+        </div>
+        <div class="calc-demo">
+          <div style="font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:14px">Tap to hear it answer right now</div>
+          <a href="tel:6142159218" class="phone-tap">(614) 215-9218</a>
+          <br>
+          <div class="phone-note">Free · 2 rings · No email · 30 seconds</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how-section">
+  <div class="how-inner">
+    <div class="rv">
+      <div class="section-tag">How It Works</div>
+      <h2 class="how-h2">THREE THINGS HAPPEN.<br><span class="g">ALL AUTOMATICALLY.</span></h2>
+      <p class="how-sub">No setup. No scripts to record. Activate in minutes. Cancel anytime.</p>
+    </div>
+    <div class="steps rv">
+      <div class="step-card">
+        <div class="step-n">01 / 03</div>
+        <div class="step-icon-box">📞</div>
+        <h3>BUYER CALLS YOUR NUMBER</h3>
+        <p>You're in a showing. Instead of voicemail — <strong>AI answers in 2 rings.</strong> 2am, Sunday, holidays. The buyer never knows you missed it.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-n">02 / 03</div>
+        <div class="step-icon-box">🤖</div>
+        <h3>AI QUALIFIES THE LEAD</h3>
+        <p>Captures name, number, property interest, timeline, and budget. <strong>Sounds like a real person.</strong> Buyers stay on the line because it's genuinely helpful.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-n">03 / 03</div>
+        <div class="step-icon-box">📲</div>
+        <h3>FULL LEAD TEXTS YOU INSTANTLY</h3>
+        <p>Before you're done with your showing, <strong>you have everything.</strong> Name. Number. Budget. You call back knowing exactly what to say.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DEMO -->
+<section class="demo-section">
+  <div class="demo-bg-num">(614) 215-9218</div>
+  <div class="demo-tag rv">Live Demo — No Email Required</div>
+  <h2 class="demo-h2 rv">DON'T TAKE OUR<br>WORD FOR IT.<br><span class="g">CALL IT NOW.</span></h2>
+  <p class="demo-sub rv rd1">No form. No sales pitch. Pick up your phone and experience exactly what your missed buyers would hear — starting in 30 seconds.</p>
+  <div class="rv rd1">
+    <a href="tel:6142159218" class="big-phone">(614) 215-9218</a>
+    <br>
+    <div class="call-hint">Picks up in 2 rings · 24/7 · Under 30 seconds</div>
+  </div>
+  <div class="script-card rv rd2">
+    <div class="script-label">What to say when it picks up:</div>
+    <p>"<em>Hi — I saw one of your listings on Zillow and had a couple questions about it.</em>" Then just listen. You'll understand why buyers stay on the line.</p>
+  </div>
+</section>
+
+<!-- OFFER -->
+<section class="offer-section">
+  <div class="offer-inner">
+    <div class="rv">
+      <div class="section-tag">The Offer</div>
+      <h2 class="offer-h2">SEVEN DAYS FREE.<br><span class="g">NO RISK.</span><br>NO CONTRACT.</h2>
+      <p class="offer-body">If you don't love it after a week, you owe nothing. Not even a conversation. <strong>At the Columbus average, one recovered deal pays for 14 months of this service.</strong> The math isn't complicated.</p>
+      <a href="https://www.instagram.com/anthonyt05/" target="_blank" class="btn-primary" style="margin-bottom:14px">
+        Start Your Free Trial
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </a>
+      <br>
+      <span style="font-size:12px;color:var(--dim);font-family:'JetBrains Mono',monospace;letter-spacing:.05em">DM @anthonyt05 on Instagram to activate</span>
+    </div>
+    <div class="rv rd1">
+      <div class="price-card">
+        <div class="price-main"><sup>$</sup>599</div>
+        <div class="price-per">per month · Real Estate Agents · Cancel anytime · No contract</div>
+        <ul class="feats">
+          <li>24/7 AI receptionist on your number</li>
+          <li>Full buyer intake on every missed call</li>
+          <li>Instant SMS lead summary to you</li>
+          <li>Sounds natural — not a phone tree</li>
+          <li>No setup fee. No contract. Ever.</li>
+          <li>One recovered deal pays for 14+ months of service</li>
+        </ul>
+        <div class="trial-line"><strong>Free trial →</strong> DM @anthonyt05 on Instagram · Activate in minutes</div>
+        <a href="https://www.instagram.com/anthonyt05/" target="_blank" class="btn-primary" style="width:100%;justify-content:center">
+          Start Free Trial →
+        </a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL -->
+<section class="final-section">
+  <div class="final-bg"></div>
+  <div class="rv">
+    <h2 class="final-h2">EVERY MISSED CALL IS A<br><span class="g">CHECK SOMEONE ELSE IS CASHING.</span></h2>
+    <p class="final-sub">7-day free trial. No setup. No contract. One call to hear it work.</p>
+    <div class="btn-row">
+      <a href="tel:6142159218" class="btn-primary">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.66A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.18 6.18l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        Try the Demo Now
+      </a>
+      <a href="https://www.instagram.com/anthonyt05/" target="_blank" class="btn-ghost">
+        DM to Start Free Trial
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="f-logo"><div class="logo-dot"></div>AnthonyTablerAI</div>
+  <div class="f-copy">Powell, OH · 2026</div>
+  <div class="f-links">
+    <a href="https://www.instagram.com/anthonyt05/" target="_blank">@anthonyt05</a>
+    <a href="tel:6142159218">Demo Line</a>
+    <a href="calculatorrealestate.netlify.app" target="_blank">Calculator</a>
+  </div>
+</footer>
+
+<script>
+// ── CURSOR GLOW ──
+const glow = document.getElementById('cursor-glow');
+document.addEventListener('mousemove', e => {
+  glow.style.left = e.clientX + 'px';
+  glow.style.top  = e.clientY + 'px';
+});
+
+// ── NAV SCROLL ──
+const nav = document.getElementById('nav');
+window.addEventListener('scroll', () => {
+  nav.classList.toggle('scrolled', window.scrollY > 60);
+}, { passive: true });
+
+// ── LIVE COUNTER ──
+// Ohio has ~45,000 active agents × 10 calls/week × 40% miss = 18 missed/min statewide
+// Columbus metro ~8,000 agents = ~3.2 missed/min
+const startTime = Date.now();
+let liveCount = 0;
+function updateLive() {
+  const secs = (Date.now() - startTime) / 1000;
+  liveCount = Math.floor(secs / 60 * 3.2);
+  const el = document.getElementById('live-count');
+  if (el) el.textContent = liveCount.toLocaleString();
+}
+updateLive();
+setInterval(updateLive, 1000);
+
+// ── CALCULATOR ──
+let view = 'yr';
+function setV(v) {
+  view = v;
+  document.getElementById('vb-yr').classList.toggle('on', v==='yr');
+  document.getElementById('vb-mo').classList.toggle('on', v==='mo');
+  calc();
+}
+function fmt(n) {
+  if (n >= 100000) return '$' + Math.round(n/1000) + 'K';
+  if (n >= 1000)   return '$' + (Math.round(n/100)/10).toFixed(1) + 'K';
+  return '$' + Math.round(n).toLocaleString();
+}
+function fmtD(n) {
+  return n < 0.5 ? '<1' : (Math.round(n*10)/10).toFixed(1);
+}
+function syncRec(val) {
+  document.getElementById('sl-rec').value = val;
+  calc();
+}
+function calc() {
+  const price = +document.getElementById('sl-price').value;
+  const calls = +document.getElementById('sl-calls').value;
+  const miss  = +document.getElementById('sl-miss').value / 100;
+  const rec   = +document.getElementById('sl-rec').value / 100;
+  document.getElementById('sl-rec2').value = Math.round(rec*100);
+  document.getElementById('sv-price').textContent = '$' + price.toLocaleString();
+  document.getElementById('sv-calls').textContent = calls + ' call' + (calls===1?'':'s');
+  document.getElementById('sv-miss').textContent  = Math.round(miss*100) + '%';
+  document.getElementById('sv-rec').textContent   = Math.round(rec*100)  + '%';
+  document.getElementById('r-rec-pct').textContent = Math.round(rec*100) + '%';
+  const comm   = price * 0.03;
+  const annual = calls * 52 * miss * 0.85 * 0.03 * comm;
+  const monthly= annual / 12;
+  const deals  = calls * 52 * miss * 0.85 * 0.03;
+  const missed = Math.round(calls * 52 * miss);
+  const recA   = annual * rec;
+  const recM   = recA / 12;
+  const el = document.getElementById('r-loss');
+  const nv = view==='yr' ? fmt(annual) : fmt(monthly);
+  if (el.textContent !== nv) { el.classList.add('pop'); el.textContent = nv; setTimeout(()=>el.classList.remove('pop'),200); }
+  document.getElementById('r-per').textContent = view==='yr' ? 'per year' : 'per month';
+  document.getElementById('r-sub').textContent = view==='yr' ? fmt(monthly)+' every month' : fmt(annual)+' every year';
+  document.getElementById('r-closing').textContent = deals>=0.5 ? `That's roughly ${fmtD(deals)} closing${deals>=1.5?'s':''}/yr going to whoever answered first.` : '';
+  document.getElementById('r-deals').textContent  = fmtD(deals);
+  document.getElementById('r-missed').textContent = missed.toLocaleString();
+  document.getElementById('r-rec').textContent    = view==='yr' ? fmt(recA) : fmt(recM);
+  document.getElementById('r-rec-hint').textContent = view==='yr' ? fmt(recM)+'/mo' : fmt(recA)+'/yr';
+}
+calc();
+
+// ── SCROLL REVEAL ──
+const rvEls = document.querySelectorAll('.rv');
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('in'); });
+}, { threshold: 0.1, rootMargin: '0px 0px -24px 0px' });
+rvEls.forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
