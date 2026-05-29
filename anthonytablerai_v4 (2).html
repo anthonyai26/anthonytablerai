@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AnthonyTablerAI — Never Miss Another Lead</title>
+<meta name="description" content="AI receptionist for real estate agents. The buyer who called you is about to call your competition. Fix that in 7 days.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{
+  --black:#020202;--s1:#080807;--s2:#0d0d0c;--s3:#121211;
+  --border:#1a1a18;--border2:#282826;
+  --gold:#C8A84B;--gold-b:#E4BE66;--gold-c:#F5D78A;
+  --gold-dim:rgba(200,168,75,.07);--gold-mid:rgba(200,168,75,.14);
+  --gold-glow:rgba(200,168,75,.25);--gold-stroke:rgba(200,168,75,.2);
+  --text:#F9F9F3;--muted:#9a9a90;--dim:#4a4a45;
+  --green:#7EC49A;--red:#D96B6B;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--black);color:var(--text);font-family:'Outfit',system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{text-decoration:none;color:inherit}
+
+/* ── CANVAS ── */
+#bg{position:fixed;inset:0;z-index:0;pointer-events:none}
+#cg{position:fixed;width:800px;height:800px;border-radius:50%;background:radial-gradient(circle,rgba(200,168,75,.03) 0%,transparent 60%);pointer-events:none;transform:translate(-50%,-50%);z-index:1;transition:left .06s linear,top .06s linear}
+.page{position:relative;z-index:10}
+
+/* ── NAV ── */
+nav{position:fixed;top:0;left:0;right:0;z-index:900;height:58px;padding:0 max(20px,4.5vw);display:flex;align-items:center;justify-content:space-between;background:rgba(2,2,2,.6);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);border-bottom:1px solid rgba(200,168,75,.06);transition:background .3s}
+nav.solid{background:rgba(2,2,2,.94)}
+.logo{font-family:'Outfit',sans-serif;font-weight:600;font-size:13px;letter-spacing:.05em;text-transform:uppercase;display:flex;align-items:center;gap:8px}
+.ldot{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 10px var(--gold-glow);animation:ldot 2.5s ease-in-out infinite}
+@keyframes ldot{0%,100%{box-shadow:0 0 6px var(--gold-glow)}50%{box-shadow:0 0 20px var(--gold-glow),0 0 40px rgba(200,168,75,.07)}}
+.nav-right{display:flex;align-items:center;gap:14px}
+.nl{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;transition:color .2s;display:none}
+@media(min-width:600px){.nl{display:block}}.nl:hover{color:var(--gold)}
+.ncta{background:var(--gold);color:#020202;font-family:'Outfit',sans-serif;font-weight:600;font-size:13px;padding:8px 20px;border-radius:100px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .2s}
+.ncta:hover{background:var(--gold-b);transform:translateY(-1px);box-shadow:0 6px 24px rgba(200,168,75,.28)}
+
+/* ── BUTTONS ── */
+.bg{background:var(--gold);color:#020202;font-family:'Outfit',sans-serif;font-weight:600;font-size:15px;padding:16px 34px;border-radius:100px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .22s;position:relative;overflow:hidden}
+.bg::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.13),transparent);transform:translateX(-100%);transition:transform .5s}
+.bg:hover::after{transform:translateX(100%)}
+.bg:hover{background:var(--gold-b);transform:translateY(-2px);box-shadow:0 16px 52px rgba(200,168,75,.35)}
+.bo{color:var(--text);font-family:'Outfit',sans-serif;font-weight:500;font-size:15px;padding:16px 34px;border-radius:100px;border:1px solid var(--border2);background:transparent;cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:all .22s}
+.bo:hover{border-color:var(--gold-stroke);background:var(--gold-dim);color:var(--gold-b)}
+
+/* ── HERO ── */
+.hero{min-height:100svh;padding:90px max(20px,5vw) 70px;display:grid;grid-template-columns:1.1fr .9fr;gap:50px;align-items:center;max-width:1240px;margin:0 auto;position:relative}
+.hl{position:relative;z-index:2}
+.heye{display:inline-flex;align-items:center;gap:8px;background:rgba(200,168,75,.07);border:1px solid rgba(200,168,75,.18);border-radius:100px;padding:6px 16px 6px 10px;margin-bottom:30px;animation:fu .8s ease .1s both}
+.heyedot{width:6px;height:6px;border-radius:50%;background:var(--gold);box-shadow:0 0 8px var(--gold-glow)}
+.heye span{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--gold)}
+.h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,8.2vw,104px);line-height:.93;letter-spacing:.01em;margin-bottom:26px;perspective:700px}
+.hl1{display:block;overflow:hidden}
+.li{display:block;transform:translateY(110%) rotateX(-20deg);animation:l3d .95s cubic-bezier(.16,1,.3,1) forwards;transform-origin:center bottom}
+.hl1:nth-child(2) .li{animation-delay:.12s}
+.hl1:nth-child(3) .li{animation-delay:.24s}
+.hl1:nth-child(4) .li{animation-delay:.36s}
+.gld{color:var(--gold)}
+@keyframes l3d{to{transform:translateY(0) rotateX(0)}}
+@keyframes fu{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.hsub{font-size:clamp(15px,1.65vw,19px);color:var(--muted);line-height:1.8;max-width:530px;margin-bottom:38px;font-weight:300;animation:fu .8s ease .55s both}
+.hsub strong{color:var(--text);font-weight:500}
+.hact{display:flex;gap:12px;flex-wrap:wrap;animation:fu .8s ease .75s both}
+.liveb{margin-top:26px;display:inline-flex;align-items:flex-start;gap:9px;background:rgba(8,8,7,.85);border:1px solid rgba(200,168,75,.14);border-radius:12px;padding:11px 15px;backdrop-filter:blur(20px);animation:fu .8s ease 1.1s both}
+.ldr{width:6px;height:6px;border-radius:50%;background:var(--red);box-shadow:0 0 8px rgba(217,107,107,.7);animation:br 1.4s infinite;margin-top:4px;flex-shrink:0}
+@keyframes br{0%,100%{opacity:1}50%{opacity:.2}}
+.lbt{font-size:12px;color:var(--muted);line-height:1.5}
+.lbt strong{color:var(--text);font-size:14px}
+
+/* ── PHONE 3D ── */
+.hr{display:flex;justify-content:center;align-items:center;position:relative}
+.pscene{width:300px;height:600px;perspective:1200px;position:relative}
+.p3d{width:100%;height:100%;transform-style:preserve-3d;transform:rotateY(-22deg) rotateX(8deg);animation:pfloat 7s ease-in-out infinite;transition:transform .4s ease;position:relative}
+@keyframes pfloat{0%,100%{transform:rotateY(-22deg) rotateX(8deg) translateY(0)}50%{transform:rotateY(-17deg) rotateX(5deg) translateY(-16px)}}
+.pglow{position:absolute;inset:-50px;background:radial-gradient(ellipse at 35% 45%,rgba(200,168,75,.18) 0%,transparent 68%);filter:blur(30px);animation:pglow 4s ease-in-out infinite;pointer-events:none}
+@keyframes pglow{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:1;transform:scale(1.08)}}
+.pring{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:50%;border:1px solid rgba(200,168,75,.14);animation:pr 3.5s ease-out infinite;pointer-events:none}
+.pr1{width:340px;height:340px;animation-delay:0s}
+.pr2{width:420px;height:420px;animation-delay:.75s}
+.pr3{width:500px;height:500px;animation-delay:1.5s}
+@keyframes pr{0%{opacity:.65;transform:translate(-50%,-50%) scale(.65)}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
+.pbody{position:absolute;inset:0;background:linear-gradient(155deg,#1e1e1b 0%,#0d0d0c 100%);border-radius:46px;border:1px solid var(--border2);box-shadow:0 50px 100px rgba(0,0,0,.7),inset 0 1px 0 rgba(255,255,255,.05),0 0 0 1px rgba(200,168,75,.05);overflow:hidden;backface-visibility:hidden}
+.psheen{position:absolute;inset:0;background:linear-gradient(135deg,rgba(255,255,255,.05) 0%,transparent 40%,rgba(255,255,255,.02) 100%);border-radius:46px;pointer-events:none}
+.pscreen{position:absolute;top:10px;left:10px;right:10px;bottom:10px;background:var(--s1);border-radius:38px;overflow:hidden}
+.pnotch{position:absolute;top:14px;left:50%;transform:translateX(-50%);width:88px;height:26px;background:var(--black);border-radius:100px;z-index:10}
+.pside{position:absolute;top:0;bottom:0;right:-8px;width:8px;background:linear-gradient(180deg,#1c1c19,#0d0d0c);border-radius:0 11px 11px 0;transform:rotateY(90deg);transform-origin:left center;box-shadow:inset -2px 0 5px rgba(0,0,0,.4)}
+.pbot{position:absolute;bottom:-7px;left:0;right:0;height:7px;background:linear-gradient(180deg,#141412,#0a0a09);border-radius:0 0 13px 13px;transform:rotateX(-90deg);transform-origin:top center}
+/* phases */
+.phase{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;opacity:0;transition:opacity .55s}
+.phase.active{opacity:1}
+/* phase 1: incoming call */
+.cav{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--gold),#8b6820);display:flex;align-items:center;justify-content:center;font-size:28px;margin-bottom:16px;box-shadow:0 0 0 8px rgba(200,168,75,.1),0 0 0 16px rgba(200,168,75,.05);animation:cavp 1.5s ease-in-out infinite}
+@keyframes cavp{0%,100%{box-shadow:0 0 0 8px rgba(200,168,75,.1),0 0 0 16px rgba(200,168,75,.05)}50%{box-shadow:0 0 0 12px rgba(200,168,75,.15),0 0 0 24px rgba(200,168,75,.04)}}
+.cname{font-size:16px;font-weight:500;margin-bottom:3px}
+.csub{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:18px}
+.clbl{font-size:12px;color:var(--muted);margin-bottom:22px;letter-spacing:.03em}
+.cbtns{display:flex;gap:28px}
+.cbtn{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px}
+.cbtn.end{background:#d96b6b}.cbtn.ans{background:#4caf50}
+/* phase 2: AI answering */
+.aibadge{background:var(--gold-dim);border:1px solid var(--gold-stroke);border-radius:100px;padding:4px 14px;font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--gold);text-transform:uppercase;margin-bottom:18px}
+.wv{display:flex;align-items:center;gap:3px;height:42px;margin-bottom:16px}
+.wb{width:3px;background:var(--gold);border-radius:100px;animation:wva 1.2s ease-in-out infinite}
+.wb:nth-child(1){height:8px;animation-delay:.0s}.wb:nth-child(2){height:20px;animation-delay:.1s}.wb:nth-child(3){height:32px;animation-delay:.2s}.wb:nth-child(4){height:40px;animation-delay:.3s}.wb:nth-child(5){height:32px;animation-delay:.4s}.wb:nth-child(6){height:20px;animation-delay:.5s}.wb:nth-child(7){height:12px;animation-delay:.6s}.wb:nth-child(8){height:26px;animation-delay:.7s}.wb:nth-child(9){height:36px;animation-delay:.8s}.wb:nth-child(10){height:16px;animation-delay:.9s}
+@keyframes wva{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.2)}}
+.aisc{font-size:11px;color:var(--muted);text-align:center;line-height:1.65;padding:0 6px}
+.aisc em{color:var(--text);font-style:normal;font-weight:500}
+/* phase 3: lead captured */
+.lc{width:100%;background:var(--s3);border:1px solid var(--border2);border-radius:14px;padding:14px;position:relative}
+.lc::before{content:'';position:absolute;top:0;left:14px;right:14px;height:1px;background:linear-gradient(90deg,transparent,rgba(200,168,75,.35),transparent)}
+.ltag{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;display:flex;align-items:center;gap:4px}
+.ltag::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--gold);box-shadow:0 0 5px var(--gold-glow);animation:br 1.5s infinite}
+.lrow{display:flex;justify-content:space-between;font-size:11px;margin-bottom:5px;color:var(--muted)}
+.lrow span:last-child{color:var(--text);font-weight:500}
+.ltime{font-size:10px;color:var(--dim);text-align:center;margin-top:8px;font-family:'JetBrains Mono',monospace}
+/* notification */
+.nf{position:absolute;top:-20px;right:-24px;background:rgba(14,14,13,.94);border:1px solid var(--border2);border-radius:12px;padding:10px 14px;min-width:178px;box-shadow:0 20px 48px rgba(0,0,0,.6);transform:translateY(-10px) rotate(2.5deg);opacity:0;transition:all .55s cubic-bezier(.34,1.56,.64,1);z-index:10}
+.nf.show{transform:translateY(0) rotate(1deg);opacity:1}
+.nfh{display:flex;align-items:center;gap:5px;margin-bottom:4px}
+.nfapp{font-size:9px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase}
+.nft{font-size:11px;font-weight:600;margin-bottom:2px}
+.nfb{font-size:10px;color:var(--muted);line-height:1.4}
+
+/* ── TICKER ── */
+.ticker{background:var(--s1);border-top:1px solid rgba(200,168,75,.07);border-bottom:1px solid rgba(200,168,75,.07);overflow:hidden;padding:12px 0;position:relative}
+.ticker::before,.ticker::after{content:'';position:absolute;top:0;bottom:0;width:100px;z-index:2}
+.ticker::before{left:0;background:linear-gradient(90deg,var(--s1),transparent)}
+.ticker::after{right:0;background:linear-gradient(-90deg,var(--s1),transparent)}
+.ttk{display:flex;white-space:nowrap;animation:tk 48s linear infinite;width:max-content}
+.ttk:hover{animation-play-state:paused}
+.ti{display:inline-flex;align-items:center;gap:9px;padding:0 26px;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.tn{color:var(--gold);font-weight:500}
+@keyframes tk{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+/* ── IMPACT NUMBER ── */
+.numsec{padding:110px max(20px,5vw) 90px;text-align:center;position:relative;overflow:hidden;background:var(--black)}
+.numgrid{position:absolute;inset:0;background-image:linear-gradient(rgba(200,168,75,.022) 1px,transparent 1px),linear-gradient(90deg,rgba(200,168,75,.022) 1px,transparent 1px);background-size:68px 68px;mask-image:radial-gradient(ellipse 65% 75% at 50% 50%,black,transparent);-webkit-mask-image:radial-gradient(ellipse 65% 75% at 50% 50%,black,transparent)}
+.numeye{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);margin-bottom:22px;position:relative}
+/* Giant 3D number with 8 shadow layers */
+.num3d-wrap{perspective:1000px;display:inline-block;cursor:default;position:relative}
+.num3d{
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(88px,18vw,210px);
+  line-height:1;letter-spacing:-.01em;
+  position:relative;display:inline-block;
+  transform-style:preserve-3d;
+  transition:transform .6s ease;
+  color:var(--gold);
+  text-shadow:0 0 100px rgba(200,168,75,.14),0 0 200px rgba(200,168,75,.07);
+}
+.num3d:hover{transform:rotateY(12deg) rotateX(-6deg)}
+/* 8 depth layers */
+.ns{position:absolute;inset:0;pointer-events:none;font-family:'Bebas Neue',sans-serif;font-size:inherit}
+.ns1{color:rgba(200,168,75,.22);transform:translateZ(-14px) translate(2.5px,2.5px)}
+.ns2{color:rgba(200,168,75,.16);transform:translateZ(-28px) translate(5px,5px)}
+.ns3{color:rgba(200,168,75,.11);transform:translateZ(-42px) translate(7.5px,7.5px)}
+.ns4{color:rgba(200,168,75,.08);transform:translateZ(-56px) translate(10px,10px)}
+.ns5{color:rgba(200,168,75,.05);transform:translateZ(-70px) translate(12.5px,12.5px)}
+.ns6{color:rgba(200,168,75,.03);transform:translateZ(-84px) translate(15px,15px)}
+.ns7{color:rgba(200,168,75,.02);transform:translateZ(-98px) translate(17.5px,17.5px)}
+.ns8{color:rgba(200,168,75,.01);transform:translateZ(-112px) translate(20px,20px)}
+.numdesc{font-size:clamp(16px,1.8vw,20px);color:var(--muted);max-width:560px;margin:22px auto 0;line-height:1.75;font-weight:300;position:relative}
+.numdesc strong{color:var(--text);font-weight:500}
+.numarrow{font-size:12px;color:var(--dim);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-top:18px;position:relative}
+
+/* 3D stat cards — deep hover */
+.scards{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;max-width:920px;margin:64px auto 0;perspective:1200px}
+.sc{background:var(--s2);border:1px solid var(--border2);border-radius:20px;padding:30px 24px;flex:1;min-width:215px;max-width:255px;text-align:center;position:relative;transform-style:preserve-3d;transition:transform .38s cubic-bezier(.34,1.56,.64,1),box-shadow .38s ease;cursor:default}
+.sc::before{content:'';position:absolute;top:0;left:18%;right:18%;height:1px;background:linear-gradient(90deg,transparent,rgba(200,168,75,.3),transparent)}
+.sc:hover{transform:translateY(-14px) rotateX(10deg) rotateY(-6deg) translateZ(20px);box-shadow:0 28px 70px rgba(0,0,0,.5),0 0 40px rgba(200,168,75,.09)}
+.scn{font-family:'Bebas Neue',sans-serif;font-size:clamp(44px,5vw,64px);color:var(--gold);letter-spacing:.01em;line-height:1;margin-bottom:10px;text-shadow:0 0 30px rgba(200,168,75,.2)}
+.sct{font-size:13px;color:var(--muted);line-height:1.55;font-weight:300}
+.sct strong{color:var(--text);font-weight:500}
+
+/* ── CALCULATOR ── */
+.calcsec{padding:96px max(20px,5vw);background:var(--s1);border-top:1px solid var(--border);border-bottom:1px solid var(--border)}
+.ci{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:72px;align-items:start}
+.stag{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);margin-bottom:20px;display:flex;align-items:center;gap:10px}
+.stag::before{content:'';width:18px;height:1px;background:var(--gold)}
+.ch{font-family:'Bebas Neue',sans-serif;font-size:clamp(44px,5.5vw,64px);letter-spacing:.01em;line-height:.93;margin-bottom:14px}
+.ch .g{color:var(--gold)}
+.cp{font-size:15px;color:var(--muted);line-height:1.7;margin-bottom:32px;font-weight:300}
+.cp strong{color:var(--text);font-weight:500}
+.sw{margin-bottom:24px}
+.st{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:9px}
+.slbl{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.sval{font-size:16px;font-weight:500;color:var(--text)}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:2px;background:var(--border2);outline:none;border-radius:2px;cursor:pointer}
+input[type=range].am::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--gold);cursor:pointer;border:none;box-shadow:0 0 0 4px rgba(200,168,75,.14),0 0 16px rgba(200,168,75,.2);transition:box-shadow .15s}
+input[type=range].gr::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:var(--green);cursor:pointer;border:none;box-shadow:0 0 0 4px rgba(126,196,154,.14)}
+/* Glassmorphism result */
+.rg{background:rgba(13,13,12,.78);border:1px solid rgba(200,168,75,.15);border-radius:24px;padding:34px;backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);position:sticky;top:82px;box-shadow:inset 0 1px 0 rgba(255,255,255,.04),0 50px 100px rgba(0,0,0,.32),0 0 0 1px rgba(200,168,75,.04)}
+.rg::before{content:'';position:absolute;top:0;left:22%;right:22%;height:1px;background:linear-gradient(90deg,transparent,rgba(200,168,75,.4),transparent)}
+.vr{display:flex;gap:4px;background:var(--s3);padding:4px;border-radius:100px;border:1px solid var(--border);margin-bottom:24px;width:fit-content}
+.vb{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.07em;text-transform:uppercase;padding:5px 16px;border-radius:100px;cursor:pointer;border:none;background:transparent;color:var(--muted);transition:all .2s}
+.vb.on{background:var(--gold-dim);border:1px solid rgba(200,168,75,.25);color:var(--gold)}
+.rl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.rnum{font-family:'Bebas Neue',sans-serif;font-size:clamp(60px,8vw,86px);color:var(--gold);letter-spacing:.01em;line-height:1;margin-bottom:3px;transition:transform .2s;text-shadow:0 0 60px rgba(200,168,75,.15)}
+.rnum.pop{transform:scale(1.05)}
+.rper{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:3px}
+.rsub{font-size:12px;color:var(--dim);font-family:'JetBrains Mono',monospace;margin-bottom:8px}
+.rcls{font-size:13px;color:var(--red);font-style:italic;min-height:22px;margin-bottom:20px;line-height:1.4}
+.mg{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:18px}
+.mc{background:var(--s3);border:1px solid var(--border);border-radius:12px;padding:13px 14px;transition:all .3s}
+.mc:hover{border-color:rgba(200,168,75,.2);transform:translateY(-2px)}
+.mcl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:5px}
+.mcv{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--red);letter-spacing:.02em;line-height:1}
+.rb{background:var(--s3);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:20px}
+.rbt{font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5}
+.rbt span{color:var(--text);font-weight:500}
+.rbb{display:flex;justify-content:space-between;align-items:baseline;margin-top:10px}
+.rbn{font-family:'Bebas Neue',sans-serif;font-size:38px;color:var(--green);letter-spacing:.02em;line-height:1}
+.rbh{font-size:11px;color:var(--muted);line-height:1.4;text-align:right;max-width:100px}
+.cd{text-align:center;padding-top:22px;border-top:1px solid var(--border)}
+.pt{display:inline-block;font-family:'Bebas Neue',sans-serif;font-size:clamp(28px,4vw,44px);letter-spacing:.04em;color:var(--gold);padding:11px 36px;border:1px solid var(--gold-stroke);border-radius:100px;background:var(--gold-dim);margin-bottom:7px;transition:all .22s;animation:rp 2.8s ease-out infinite;text-decoration:none}
+@keyframes rp{0%{box-shadow:0 0 0 0 rgba(200,168,75,.4)}70%{box-shadow:0 0 0 20px rgba(200,168,75,0)}100%{box-shadow:0 0 0 0 rgba(200,168,75,0)}}
+.pt:hover{background:rgba(200,168,75,.14);transform:scale(1.02);box-shadow:0 0 60px rgba(200,168,75,.22)}
+.phn{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.1em;color:var(--dim);text-transform:uppercase}
+
+/* ── DEMO — THE CLIMAX ── */
+.demo{
+  min-height:96svh;
+  background:var(--black);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  text-align:center;
+  padding:80px max(20px,5vw);
+  position:relative;overflow:hidden;
+}
+/* radial glow that breathes */
+.demo::before{content:'';position:absolute;width:900px;height:900px;background:radial-gradient(circle,rgba(200,168,75,.07) 0%,transparent 58%);top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;animation:dp 4.5s ease-in-out infinite}
+@keyframes dp{0%,100%{opacity:.6;transform:translate(-50%,-50%) scale(1)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.12)}}
+.demotag{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);display:flex;align-items:center;justify-content:center;gap:11px;margin-bottom:26px;position:relative}
+.demotag::before,.demotag::after{content:'';width:36px;height:1px;background:var(--gold)}
+.demoh{font-family:'Bebas Neue',sans-serif;font-size:clamp(52px,8vw,96px);line-height:.93;letter-spacing:.01em;margin-bottom:18px;position:relative}
+.demoh .g{color:var(--gold)}
+.demos{font-size:17px;color:var(--muted);max-width:500px;line-height:1.72;margin:0 auto 52px;font-weight:300;position:relative}
+/* Giant 3D phone number with sonar */
+.dnwrap{position:relative;display:inline-block;margin-bottom:16px}
+.dn{
+  display:inline-block;
+  font-family:'Bebas Neue',sans-serif;
+  font-size:clamp(52px,10vw,108px);
+  letter-spacing:.04em;color:var(--gold);
+  padding:20px 60px;
+  border:1px solid var(--gold-stroke);
+  border-radius:130px;background:var(--gold-dim);
+  transition:all .22s;position:relative;z-index:2;
+  animation:rp 2.4s ease-out infinite;line-height:1;
+  /* 3D depth layers on the number itself */
+  text-shadow:
+    2px 2px 0 rgba(200,168,75,.2),
+    4px 4px 0 rgba(200,168,75,.12),
+    6px 6px 0 rgba(200,168,75,.07),
+    8px 8px 0 rgba(200,168,75,.04),
+    0 0 80px rgba(200,168,75,.18);
+}
+.dn:hover{background:rgba(200,168,75,.14);transform:scale(1.025);box-shadow:0 0 100px rgba(200,168,75,.25)}
+.sr{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);border-radius:100px;border:1px solid rgba(200,168,75,.18);pointer-events:none;animation:sonar 3.5s ease-out infinite}
+.sr1{width:110%;height:180%;animation-delay:0s}
+.sr2{width:135%;height:240%;animation-delay:.9s}
+.sr3{width:160%;height:300%;animation-delay:1.8s}
+@keyframes sonar{0%{opacity:.65;transform:translate(-50%,-50%) scale(.7)}100%{opacity:0;transform:translate(-50%,-50%) scale(1)}}
+.dhint{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--dim);letter-spacing:.12em;text-transform:uppercase;margin-bottom:44px;position:relative}
+.dscript{max-width:460px;background:var(--s2);border:1px solid var(--border2);border-radius:16px;padding:22px 26px;text-align:left;position:relative}
+.dslbl{font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.15em;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.dscript p{font-size:15px;color:var(--muted);line-height:1.65}
+.dscript em{color:var(--text);font-style:normal;font-weight:500}
+
+/* ── HOW IT WORKS 3D ── */
+.how{padding:96px max(20px,5vw);background:var(--s1);border-top:1px solid var(--border)}
+.hwrap{max-width:1120px;margin:0 auto}
+.hh{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,6vw,76px);letter-spacing:.01em;line-height:.93;margin-bottom:12px}
+.hh .g{color:var(--gold)}
+.hs{font-size:16px;color:var(--muted);margin-bottom:56px;font-weight:300;max-width:540px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;background:var(--border);border-radius:22px;overflow:hidden;perspective:1300px}
+.step{background:var(--s1);padding:42px 30px;position:relative;transition:all .38s cubic-bezier(.34,1.56,.64,1);transform-style:preserve-3d}
+.step:hover{background:var(--s2);transform:translateZ(22px) translateY(-8px) rotateX(3deg);box-shadow:0 24px 60px rgba(0,0,0,.45);z-index:2}
+.sn{font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:.14em;color:var(--gold);text-transform:uppercase;margin-bottom:20px}
+.sico{width:50px;height:50px;background:var(--gold-dim);border:1px solid var(--gold-stroke);border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:20px;transition:all .38s}
+.step:hover .sico{background:rgba(200,168,75,.16);box-shadow:0 0 24px rgba(200,168,75,.18)}
+.step h3{font-family:'Bebas Neue',sans-serif;font-size:27px;letter-spacing:.02em;line-height:1.1;margin-bottom:12px}
+.step p{font-size:14px;color:var(--muted);line-height:1.72;font-weight:300}
+.step p strong{color:var(--text);font-weight:500}
+.step:not(:last-child)::after{content:'→';position:absolute;right:-16px;top:50%;transform:translateY(-50%);font-size:15px;color:var(--gold);background:var(--black);width:32px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:50%;border:1px solid var(--gold-stroke);z-index:3}
+
+/* ── OFFER ── */
+.offer{padding:96px max(20px,5vw);background:var(--black)}
+.oinner{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:62px;align-items:start}
+.oh{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,5.5vw,70px);letter-spacing:.01em;line-height:.93;margin-bottom:18px}
+.oh .g{color:var(--gold)}
+.op{font-size:17px;color:var(--muted);line-height:1.8;margin-bottom:34px;font-weight:300}
+.op strong{color:var(--text);font-weight:500}
+/* 3D price card */
+.pc{background:var(--s2);border:1px solid var(--border2);border-radius:24px;padding:40px;position:relative;overflow:hidden;transform-style:preserve-3d;transition:transform .42s cubic-bezier(.34,1.56,.64,1),box-shadow .42s ease}
+.pc:hover{transform:perspective(900px) rotateY(-6deg) rotateX(3deg) translateZ(12px);box-shadow:0 40px 90px rgba(0,0,0,.45),0 0 50px rgba(200,168,75,.06)}
+.pc::before{content:'';position:absolute;top:0;left:24%;right:24%;height:1px;background:linear-gradient(90deg,transparent,rgba(200,168,75,.35),transparent)}
+.pp{font-family:'Bebas Neue',sans-serif;font-size:80px;letter-spacing:-.01em;line-height:1;margin-bottom:3px}
+.pp sup{font-size:30px;vertical-align:top;margin-top:13px;display:inline-block;color:var(--muted)}
+.pmo{font-size:12px;color:var(--muted);margin-bottom:18px;font-family:'JetBrains Mono',monospace;letter-spacing:.04em}
+/* ROI callout badge */
+.roib{background:rgba(126,196,154,.08);border:1px solid rgba(126,196,154,.2);border-radius:10px;padding:12px 15px;margin-bottom:22px;font-size:13px;color:var(--green);line-height:1.55}
+.roib strong{font-weight:600}
+.feats{list-style:none;margin-bottom:26px}
+.feats li{display:flex;align-items:flex-start;gap:11px;font-size:14px;color:var(--muted);padding:10px 0;border-bottom:1px solid var(--border);font-weight:300;line-height:1.5}
+.feats li:last-child{border:none}
+.feats li::before{content:'✓';color:var(--gold);font-weight:600;flex-shrink:0}
+.trn{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--muted);letter-spacing:.04em;margin-bottom:18px}
+.trn strong{color:var(--gold)}
+
+/* ── FINAL CTA ── */
+.final{padding:110px max(20px,5vw);background:var(--s1);border-top:1px solid var(--border);text-align:center;position:relative;overflow:hidden}
+.final::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse 55% 48% at 50% 100%,rgba(200,168,75,.06) 0%,transparent 68%)}
+.fh{font-family:'Bebas Neue',sans-serif;font-size:clamp(48px,7.5vw,100px);letter-spacing:.01em;line-height:.93;margin-bottom:20px;max-width:840px;margin-left:auto;margin-right:auto;position:relative}
+.fh .g{color:var(--gold)}
+.fs{font-size:16px;color:var(--muted);margin-bottom:44px;font-weight:300;position:relative}
+.br{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;position:relative}
+
+/* ── FOOTER ── */
+footer{padding:30px max(20px,5vw);border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px}
+.fl{font-family:'Outfit',sans-serif;font-weight:600;font-size:13px;display:flex;align-items:center;gap:7px;letter-spacing:.04em;text-transform:uppercase}
+.fc{font-size:11px;color:var(--dim);font-family:'JetBrains Mono',monospace;letter-spacing:.05em}
+.flinks{display:flex;gap:18px}
+.flinks a{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;transition:color .2s}
+.flinks a:hover{color:var(--gold)}
+
+/* ── REVEAL (3D page-turn on scroll) ── */
+.rv{opacity:0;transform:translateY(28px) rotateX(8deg);transition:opacity .75s ease,transform .75s ease;transform-origin:center bottom;perspective:600px}
+.rv.in{opacity:1;transform:translateY(0) rotateX(0)}
+.d1{transition-delay:.1s}.d2{transition-delay:.2s}.d3{transition-delay:.3s}
+
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr;gap:44px;padding-top:82px;text-align:center}
+  .heye{margin:0 auto 26px}
+  .hsub{max-width:100%}
+  .hact{justify-content:center}
+  .hr{order:-1}
+  .pscene{width:240px;height:480px}
+  .ci{grid-template-columns:1fr}
+  .rg{position:static}
+  .steps{grid-template-columns:1fr}
+  .step:not(:last-child)::after{display:none}
+  .oinner{grid-template-columns:1fr}
+  .liveb{display:none}
+}
+@media(max-width:600px){
+  nav{padding:0 16px}
+  .hero,.numsec,.calcsec,.demo,.how,.offer,.final{padding-left:16px;padding-right:16px}
+  .bg,.bo{width:100%;justify-content:center}
+  .hact{flex-direction:column}
+  .br{flex-direction:column;align-items:center}
+  .dn{font-size:clamp(38px,11vw,64px);padding:16px 28px}
+}
+</style>
+</head>
+<body>
+<canvas id="bg"></canvas>
+<div id="cg"></div>
+
+<div class="page">
+
+<!-- NAV -->
+<nav id="nav">
+  <div class="logo"><div class="ldot"></div>AnthonyTablerAI</div>
+  <div class="nav-right">
+    <a href="#demo" class="nl">Demo</a>
+    <a href="#calculator" class="nl">Calculator</a>
+    <a href="tel:6142159218" class="ncta">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.66A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.18 6.18l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+      Try Free Demo
+    </a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section style="background:var(--black)">
+  <div class="hero">
+    <!-- LEFT COPY -->
+    <div class="hl">
+      <div class="heye"><div class="heyedot"></div><span>AI Receptionist · Real Estate Agents · 614</span></div>
+      <h1 class="h1">
+        <span class="hl1"><span class="li">WHILE YOU'RE IN</span></span>
+        <span class="hl1"><span class="li">A SHOWING,</span></span>
+        <span class="hl1"><span class="li gld">A BUYER IS CALLING.</span></span>
+        <span class="hl1"><span class="li">YOUR COMPETITION PICKS UP.</span></span>
+      </h1>
+      <p class="hsub">
+        The buyer who just called won't leave a voicemail. They'll try the next agent on their list — and that agent closes the deal, <strong>earns the referral, and gets the five-star review.</strong> We built the AI that answers in 2 rings, 24/7, so that agent is always you.
+      </p>
+      <div class="hact">
+        <a href="tel:6142159218" class="bg">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.66A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.18 6.18l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+          Hear It Answer Free
+        </a>
+        <a href="https://www.instagram.com/anthonyt05/" target="_blank" class="bo">
+          Start 7-Day Trial →
+        </a>
+      </div>
+      <div class="liveb">
+        <div class="ldr"></div>
+        <div class="lbt">Columbus agents have missed <strong id="livn">0</strong> calls since you opened this page</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: 3D PHONE -->
+    <div class="hr">
+      <div class="pscene">
+        <div class="p3d" id="ph3d">
+          <div class="pglow"></div>
+          <div class="pring pr1"></div>
+          <div class="pring pr2"></div>
+          <div class="pring pr3"></div>
+          <div class="pbody">
+            <div class="psheen"></div>
+            <div class="pscreen">
+              <div class="pnotch"></div>
+              <!-- Phase 1: Incoming call -->
+              <div class="phase active" id="ph1">
+                <div style="height:34px"></div>
+                <div class="cav">👤</div>
+                <div class="cname">Buyer — Unknown</div>
+                <div class="csub">Asking about your listing</div>
+                <div class="clbl">You're in a showing...</div>
+                <div class="cbtns">
+                  <div class="cbtn end">📵</div>
+                  <div class="cbtn ans">📞</div>
+                </div>
+              </div>
+              <!-- Phase 2: AI answering -->
+              <div class="phase" id="ph2">
+                <div style="height:34px"></div>
+                <div class="aibadge">AI Answering</div>
+                <div class="wv">
+                  <div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div>
+                  <div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div><div class="wb"></div>
+                </div>
+                <div class="aisc"><em>"Thanks for calling — let me get your info so the agent can reach you right away. What property were you asking about?"</em></div>
+              </div>
+              <!-- Phase 3: Lead captured -->
+              <div class="phase" id="ph3">
+                <div style="height:44px"></div>
+                <div class="lc">
+                  <div class="ltag">Lead Captured</div>
+                  <div class="lrow"><span>Buyer</span><span>Sarah M.</span></div>
+                  <div class="lrow"><span>Property</span><span>123 Oak Dr</span></div>
+                  <div class="lrow"><span>Pre-approved</span><span>$380K ✓</span></div>
+                  <div class="lrow"><span>Timeline</span><span>ASAP</span></div>
+                  <div class="lrow"><span>Phone</span><span>(614) 555-0182</span></div>
+                  <div class="ltime">📧 Emailed to you · 38 seconds ago</div>
+                </div>
+                <!-- Notification float -->
+                <div class="nf" id="notif">
+                  <div class="nfh"><span>📧</span><span class="nfapp">AnthonyTablerAI</span></div>
+                  <div class="nft">New buyer lead</div>
+                  <div class="nfb">Sarah M · $380K · 123 Oak Dr · ASAP</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="pside"></div>
+          <div class="pbot"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ttk">
+    <span class="ti"><span class="tn">85%</span> of buyers who miss you call your competition immediately</span>
+    <span class="ti" style="color:var(--dim)">·</span>
+    <span class="ti"><span class="tn">21×</span> higher conversion when you respond in under 5 minutes</span>
+    <span class="ti" style="color:var(--dim)">·</span>
+    <span class="ti"><span class="tn">$47K</span> lost annually per Columbus agent to missed calls</span>
+    <span class="ti" style="color:var(--dim)">·</span>
+    <span class="ti"><span class="tn">2 rings</span> and the AI answers — every call, 24/7</span>
+    <span class="ti" style="color:var(--dim)">·</span>
+    <span class="ti"><span class="tn">$599/mo</span> · 7-day free trial · no card · no contract</span>
+    <span class="ti" style="color:var(--dim)">·</span>
+    <span class="ti"><span class="tn">85%</span> of buyers who miss you call your competition immediately</span>
+    <span class="ti" style="color:var(--dim)">·</span>
+    <span class="ti"><span class="tn">21×</span> higher conversion when you respond in under 5 minutes</span>
+    <span class="ti" style="color:var(--dim)">·</span>
+    <span class="ti"><span class="tn">$47K</span> lost annually per Columbus agent to missed calls</span>
+    <span class="ti" style="color:var(--dim)">·</span>
+    <span class="ti"><span class="tn">2 rings</span> and the AI answers — every call, 24/7</span>
+    <span class="ti" style="color:var(--dim)">·</span>
+    <span class="ti"><span class="tn">$599/mo</span> · 7-day free trial · no card · no contract</span>
+    <span class="ti" style="color:var(--dim)">·</span>
+  </div>
+</div>
+
+<!-- THE NUMBER -->
+<section class="numsec">
+  <div class="numgrid"></div>
+  <div class="rv">
+    <p class="numeye">Here's how much you've already lost this year.</p>
+    <div class="num3d-wrap" id="numwrap">
+      <div class="num3d" id="bignum">
+        <span style="position:relative;z-index:3">$47,000</span>
+        <div class="ns ns1" aria-hidden="true">$47,000</div>
+        <div class="ns ns2" aria-hidden="true">$47,000</div>
+        <div class="ns ns3" aria-hidden="true">$47,000</div>
+        <div class="ns ns4" aria-hidden="true">$47,000</div>
+        <div class="ns ns5" aria-hidden="true">$47,000</div>
+        <div class="ns ns6" aria-hidden="true">$47,000</div>
+        <div class="ns ns7" aria-hidden="true">$47,000</div>
+        <div class="ns ns8" aria-hidden="true">$47,000</div>
+      </div>
+    </div>
+    <p class="numdesc">
+      Per year. Per Columbus agent. Not from bad leads — from <strong>answering the client in front of you while the next one goes to your competition.</strong> One recovered deal at your average price covers 14 months of the fix.
+    </p>
+    <p class="numarrow">↓ Enter your numbers below</p>
+  </div>
+  <div class="scards rv rd1">
+    <div class="sc"><div class="scn">85%</div><div class="sct">of callers who reach voicemail <strong>immediately call the next agent.</strong></div></div>
+    <div class="sc"><div class="scn">21×</div><div class="sct">more likely to convert when you respond <strong>within 5 minutes</strong> vs. 30.</div></div>
+    <div class="sc"><div class="scn">2 rings</div><div class="sct">That's how fast the AI picks up. <strong>Every call. Every night.</strong> Every weekend.</div></div>
+  </div>
+</section>
+
+<!-- DEMO — THE CLIMAX -->
+<section class="demo" id="demo">
+  <div class="demotag rv">Live Demo — No Email. No Form. No Pitch.</div>
+  <h2 class="demoh rv">
+    YOU DON'T NEED<br>TO TRUST US.<br>
+    <span class="g">JUST CALL.</span>
+  </h2>
+  <p class="demos rv d1">
+    Pick up your phone right now. Talk to it like a buyer asking about one of your listings. By the time you hang up, every showing you walk into will feel different.
+  </p>
+  <div class="rv d1">
+    <div class="dnwrap">
+      <div class="sr sr1"></div>
+      <div class="sr sr2"></div>
+      <div class="sr sr3"></div>
+      <a href="tel:6142159218" class="dn">(614) 215-9218</a>
+    </div>
+    <br>
+    <div class="dhint">Picks up in 2 rings · Available 24/7 · Under 30 seconds</div>
+  </div>
+    <div class="dscript rv d2">
+      <div class="dslbl">Say this when it picks up:</div>
+      <p>"<em>Hi — I saw one of your listings on Zillow and had a couple questions about it.</em>" Then just listen. You'll feel exactly what your buyers feel when they hit your voicemail and keep calling down the list.</p>
+    </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section class="how">
+  <div class="hwrap">
+    <div class="rv">
+      <div class="stag">How It Works</div>
+      <h2 class="hh">THREE THINGS HAPPEN.<br><span class="g">ALL AUTOMATICALLY.</span></h2>
+      <p class="hs">No setup. No scripts. No tech team. Activate in minutes. Cancel anytime.</p>
+    </div>
+    <div class="steps rv">
+      <div class="step">
+        <div class="sn">01 / 03</div>
+        <div class="sico">📞</div>
+        <h3>BUYER CALLS YOUR NUMBER</h3>
+        <p>You're in a showing. Instead of voicemail — <strong>AI answers in 2 rings.</strong> 2am, Sunday, holidays. Your buyer never knows you missed it.</p>
+      </div>
+      <div class="step">
+        <div class="sn">02 / 03</div>
+        <div class="sico">🤖</div>
+        <h3>AI QUALIFIES THE BUYER</h3>
+        <p>Sounds completely natural. Captures their name, number, property interest, timeline, and budget. <strong>Buyers stay on the line</strong> because it's genuinely helpful.</p>
+      </div>
+      <div class="step">
+        <div class="sn">03 / 03</div>
+        <div class="sico">📧</div>
+        <h3>FULL LEAD EMAIL — INSTANTLY</h3>
+        <p>Before you're off your showing, <strong>you have everything in your inbox.</strong> Name. Number. Budget. Timeline. You call back knowing exactly who you're talking to — while your competition is still waiting for a voicemail that never came.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CALCULATOR -->
+<section class="calcsec" id="calculator">
+  <div class="ci">
+    <div class="rv">
+      <div class="stag">Your Numbers</div>
+      <h2 class="ch">HOW MUCH ARE YOU <span class="g">ACTUALLY LOSING?</span></h2>
+      <p class="cp">Most Columbus agents think it's around $10K. <strong>The real number is usually closer to $47K</strong> — and every week without a fix makes it worse.</p>
+      <div class="sw">
+        <div class="st"><span class="slbl">Average sale price</span><span class="sval" id="svp">$290,000</span></div>
+        <input type="range" class="am" id="slp" min="150000" max="800000" step="10000" value="290000" oninput="calc()">
+      </div>
+      <div class="sw">
+        <div class="st"><span class="slbl">Buyer calls per week</span><span class="sval" id="svc">10 calls</span></div>
+        <input type="range" class="am" id="slc" min="2" max="30" step="1" value="10" oninput="calc()">
+      </div>
+      <div class="sw">
+        <div class="st"><span class="slbl">Missed during showings & off-hours</span><span class="sval" id="svm">40%</span></div>
+        <input type="range" class="am" id="slm" min="10" max="60" step="5" value="40" oninput="calc()">
+      </div>
+      <div class="sw" style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border)">
+        <div class="st"><span class="slbl">Calls you could capture back</span><span class="sval" id="svr">50%</span></div>
+        <input type="range" class="gr" id="slr" min="10" max="100" step="10" value="50" oninput="calc()">
+      </div>
+    </div>
+    <div class="rv d1">
+      <div class="rg">
+        <div class="vr">
+          <button class="vb on" id="vyr" onclick="sv('yr')">Annual</button>
+          <button class="vb" id="vmo" onclick="sv('mo')">Monthly</button>
+        </div>
+        <div class="rl">Commission slipping away</div>
+        <div class="rnum" id="rn">$0</div>
+        <div class="rper" id="rp">per year</div>
+        <div class="rsub" id="rs"></div>
+        <div class="rcls" id="rc"></div>
+        <div class="mg">
+          <div class="mc"><div class="mcl">Deals lost / yr</div><div class="mcv" id="rd">0</div></div>
+          <div class="mc"><div class="mcl">Missed calls / yr</div><div class="mcv" id="rm">0</div></div>
+        </div>
+        <div class="rb">
+          <div class="rbt">Recover <span id="rrp">50%</span> of those missed calls...</div>
+          <input type="range" class="gr" id="slr2" min="10" max="100" step="10" value="50" oninput="syncR(this.value)" style="margin-bottom:0">
+          <div class="rbb"><div class="rbn" id="rrn">$0</div><div class="rbh" id="rrh">back per year</div></div>
+        </div>
+        <div class="cd">
+          <div style="font-size:10px;color:var(--dim);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px">Hear what answers every missed call</div>
+          <a href="tel:6142159218" class="pt">(614) 215-9218</a>
+          <br>
+          <div class="phn">Free · 2 rings · No email · 30 sec</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OFFER -->
+<section class="offer">
+  <div class="oinner">
+    <div class="rv">
+      <div class="stag">The Offer</div>
+      <h2 class="oh">SEVEN DAYS FREE.<br><span class="g">NO CARD.</span><br>NO CONTRACT.</h2>
+      <p class="op">If it doesn't pay for itself in the first week, you owe nothing. <strong>One recovered deal at the Columbus average covers over a year of this service at $599/month.</strong> The agents who activate this week start capturing leads tonight.</p>
+      <a href="https://www.instagram.com/anthonyt05/" target="_blank" class="bg" style="margin-bottom:12px">Start Your Free Trial →</a>
+      <br>
+      <span style="font-size:12px;color:var(--dim);font-family:'JetBrains Mono',monospace;letter-spacing:.05em">DM @anthonyt05 on Instagram to activate in minutes</span>
+    </div>
+    <div class="rv d1">
+      <div class="pc">
+        <div class="pp"><sup>$</sup>599</div>
+        <div class="pmo">per month · Real Estate Agents · Cancel anytime</div>
+        <div class="roib"><strong>ROI in one deal:</strong> Columbus avg commission = $8,700. One recovered closing pays for 14+ months of this service.</div>
+        <ul class="feats">
+          <li>24/7 AI receptionist answering your number</li>
+          <li>Full buyer intake — name, number, property, budget, timeline</li>
+          <li>Instant lead email sent to you automatically</li>
+          <li>Sounds completely natural — not a phone tree</li>
+          <li>No setup fee. No contract. Cancel anytime.</li>
+          <li>7-day free trial — no card required to start</li>
+        </ul>
+        <div class="trn"><strong>Free trial →</strong> DM @anthonyt05 on Instagram</div>
+        <a href="https://www.instagram.com/anthonyt05/" target="_blank" class="bg" style="width:100%;justify-content:center">Start Free Trial →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FINAL CTA -->
+<section class="final">
+  <div class="rv">
+    <h2 class="fh">YOU'RE THE AGENT<br>WHO ALWAYS ANSWERS.<br><span class="g">THAT AGENT ALWAYS WINS.</span></h2>
+    <p class="fs">7-day free trial. No setup. No card. No contract. One call to understand why.</p>
+    <div class="br">
+      <a href="tel:6142159218" class="bg">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.8a19.79 19.79 0 01-3.07-8.66A2 2 0 012 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.91 8.91a16 16 0 006.18 6.18l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>
+        Try the Demo Now
+      </a>
+      <a href="https://www.instagram.com/anthonyt05/" target="_blank" class="bo">DM to Start Free Trial</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="fl"><div class="ldot"></div>AnthonyTablerAI</div>
+  <div class="fc">614 · 2026</div>
+  <div class="flinks">
+    <a href="https://www.instagram.com/anthonyt05/" target="_blank">@anthonyt05</a>
+    <a href="tel:6142159218">Demo</a>
+    <a href="https://calculatorrealestate.netlify.app" target="_blank">Calculator</a>
+  </div>
+</footer>
+</div><!-- /page -->
+
+<script>
+// ═══ THREE.JS — NEURAL NETWORK ═══
+(function(){
+  const canvas=document.getElementById('bg');
+  const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(window.innerWidth,window.innerHeight);
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(70,window.innerWidth/window.innerHeight,.1,100);
+  camera.position.z=7;
+
+  // ── NODES ──
+  const N=110;
+  const nodes=[];
+  for(let i=0;i<N;i++){
+    nodes.push({
+      x:(Math.random()-.5)*22,
+      y:(Math.random()-.5)*12,
+      z:(Math.random()-.5)*8-2,
+      vx:(Math.random()-.5)*.007,
+      vy:(Math.random()-.5)*.005,
+      vz:(Math.random()-.5)*.003,
+      size:Math.random()*3+.8,
+      phase:Math.random()*Math.PI*2,
+    });
+  }
+
+  // Points
+  const pPos=new Float32Array(N*3);
+  const pSz=new Float32Array(N);
+  nodes.forEach((n,i)=>{pPos[i*3]=n.x;pPos[i*3+1]=n.y;pPos[i*3+2]=n.z;pSz[i]=n.size;});
+  const pGeo=new THREE.BufferGeometry();
+  pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
+  pGeo.setAttribute('size',new THREE.BufferAttribute(pSz,1));
+  const pMat=new THREE.ShaderMaterial({
+    uniforms:{uT:{value:0},uColor:{value:new THREE.Color(.78,.66,.29)}},
+    vertexShader:`
+      attribute float size;
+      uniform float uT;
+      varying float vA;
+      void main(){
+        vec3 p=position;
+        vA=(sin(p.z*.8+uT*.6)*.5+.5)*.7+.15;
+        gl_PointSize=size*(280./length((modelViewMatrix*vec4(p,1.)).xyz));
+        gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);
+      }
+    `,
+    fragmentShader:`
+      varying float vA;
+      void main(){
+        float d=distance(gl_PointCoord,vec2(.5));
+        if(d>.5)discard;
+        float a=(1.-d*2.)*vA;
+        gl_FragColor=vec4(.78,.66,.29,a);
+      }
+    `,
+    transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+  });
+  const pointsMesh=new THREE.Points(pGeo,pMat);
+  scene.add(pointsMesh);
+
+  // Lines
+  const THRESH=3.2;
+  const maxL=N*(N-1)/2;
+  const lPos=new Float32Array(maxL*6);
+  const lGeo=new THREE.BufferGeometry();
+  lGeo.setAttribute('position',new THREE.BufferAttribute(lPos,3));
+  const lMat=new THREE.LineBasicMaterial({color:0xC8A84B,transparent:true,opacity:.12});
+  const linesMesh=new THREE.LineSegments(lGeo,lMat);
+  scene.add(linesMesh);
+
+  let mx=0,my=0;
+  document.addEventListener('mousemove',e=>{mx=(e.clientX/window.innerWidth-.5)*3;my=-(e.clientY/window.innerHeight-.5)*2;});
+
+  const clock=new THREE.Clock();
+  function loop(){
+    requestAnimationFrame(loop);
+    const t=clock.getElapsedTime();
+    pMat.uniforms.uT.value=t;
+
+    let lc=0;
+    nodes.forEach((n,i)=>{
+      // Move
+      n.x+=n.vx; n.y+=n.vy; n.z+=n.vz;
+      // Wrap
+      if(n.x>11)n.x=-11; if(n.x<-11)n.x=11;
+      if(n.y>6.5)n.y=-6.5; if(n.y<-6.5)n.y=6.5;
+      if(n.z>4)n.z=-4; if(n.z<-4)n.z=4;
+      // Mouse attraction (gentle)
+      const mdx=mx-n.x*.3, mdy=my-n.y*.3;
+      n.vx+=(Math.random()-.5)*.0004;
+      n.vy+=(Math.random()-.5)*.0004;
+      // Speed cap
+      const spd=Math.sqrt(n.vx*n.vx+n.vy*n.vy);
+      if(spd>.012){n.vx*=.012/spd;n.vy*=.012/spd;}
+
+      pPos[i*3]=n.x; pPos[i*3+1]=n.y; pPos[i*3+2]=n.z;
+
+      // Lines
+      for(let j=i+1;j<N;j++){
+        const nj=nodes[j];
+        const dx=n.x-nj.x,dy=n.y-nj.y,dz=n.z-nj.z;
+        const dist=Math.sqrt(dx*dx+dy*dy+dz*dz);
+        if(dist<THRESH){
+          lPos[lc*6]=n.x;lPos[lc*6+1]=n.y;lPos[lc*6+2]=n.z;
+          lPos[lc*6+3]=nj.x;lPos[lc*6+4]=nj.y;lPos[lc*6+5]=nj.z;
+          lc++;
+        }
+      }
+    });
+    pGeo.attributes.position.needsUpdate=true;
+    lGeo.attributes.position.needsUpdate=true;
+    lGeo.setDrawRange(0,lc*2);
+
+    // Slow orbit
+    scene.rotation.y=t*.008;
+    scene.rotation.x=Math.sin(t*.006)*.04;
+    renderer.render(scene,camera);
+  }
+  loop();
+  window.addEventListener('resize',()=>{
+    camera.aspect=window.innerWidth/window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth,window.innerHeight);
+  });
+})();
+
+// ── CURSOR GLOW ──
+const cg=document.getElementById('cg');
+document.addEventListener('mousemove',e=>{cg.style.left=e.clientX+'px';cg.style.top=e.clientY+'px';});
+
+// ── NAV SOLID ──
+window.addEventListener('scroll',()=>document.getElementById('nav').classList.toggle('solid',scrollY>60),{passive:true});
+
+// ── 3D PHONE AGGRESSIVE MOUSE TILT ──
+const ph3d=document.getElementById('ph3d');
+let tX=8,tY=-22;
+document.addEventListener('mousemove',e=>{
+  const tx=(e.clientY/window.innerHeight-.5)*18;
+  const ty=(e.clientX/window.innerWidth-.5)*-28;
+  tX+=(tx-tX)*.07; tY+=(ty-tY)*.07;
+  ph3d.style.transform=`rotateY(${tY}deg) rotateX(${tX}deg)`;
+  ph3d.style.animation='none';
+});
+
+// ── PHONE PHASES ──
+const phEls=[document.getElementById('ph1'),document.getElementById('ph2'),document.getElementById('ph3')];
+const notif=document.getElementById('notif');
+let curPh=0;
+const phDur=[3400,4200,5000];
+function showPh(i){phEls.forEach((p,j)=>p.classList.toggle('active',i===j));if(i===2)setTimeout(()=>notif.classList.add('show'),900);else notif.classList.remove('show');}
+showPh(0);
+function phLoop(){setTimeout(()=>{curPh=(curPh+1)%3;showPh(curPh);phLoop();},phDur[curPh]);}
+phLoop();
+
+// ── LIVE COUNTER ──
+const t0=Date.now();
+function ul(){document.getElementById('livn').textContent=Math.floor((Date.now()-t0)/1000/60*3.2).toLocaleString();}
+ul();setInterval(ul,1000);
+
+// ── 3D NUMBER MOUSE TILT ──
+const bn=document.getElementById('bignum');
+document.addEventListener('mousemove',e=>{
+  const rx=(e.clientY/window.innerHeight-.5)*-10;
+  const ry=(e.clientX/window.innerWidth-.5)*14;
+  if(bn) bn.style.transform=`rotateY(${ry}deg) rotateX(${rx}deg)`;
+});
+
+// ── CALCULATOR ──
+let cv='yr';
+function sv(v){cv=v;document.getElementById('vyr').classList.toggle('on',v==='yr');document.getElementById('vmo').classList.toggle('on',v==='mo');calc();}
+function fmt(n){if(n>=100000)return'$'+Math.round(n/1000)+'K';if(n>=1000)return'$'+(Math.round(n/100)/10).toFixed(1)+'K';return'$'+Math.round(n).toLocaleString();}
+function fmtD(n){return n<.5?'<1':(Math.round(n*10)/10).toFixed(1);}
+function syncR(v){document.getElementById('slr').value=v;calc();}
+function calc(){
+  const price=+document.getElementById('slp').value;
+  const calls=+document.getElementById('slc').value;
+  const miss=+document.getElementById('slm').value/100;
+  const rec=+document.getElementById('slr').value/100;
+  document.getElementById('slr2').value=Math.round(rec*100);
+  document.getElementById('svp').textContent='$'+price.toLocaleString();
+  document.getElementById('svc').textContent=calls+' call'+(calls===1?'':'s');
+  document.getElementById('svm').textContent=Math.round(miss*100)+'%';
+  document.getElementById('svr').textContent=Math.round(rec*100)+'%';
+  document.getElementById('rrp').textContent=Math.round(rec*100)+'%';
+  const comm=price*.03,annual=calls*52*miss*.85*.03*comm,monthly=annual/12;
+  const deals=calls*52*miss*.85*.03,missed=Math.round(calls*52*miss);
+  const recA=annual*rec,recM=recA/12;
+  const el=document.getElementById('rn');
+  const nv=cv==='yr'?fmt(annual):fmt(monthly);
+  if(el.textContent!==nv){el.classList.add('pop');el.textContent=nv;setTimeout(()=>el.classList.remove('pop'),200);}
+  document.getElementById('rp').textContent=cv==='yr'?'per year':'per month';
+  document.getElementById('rs').textContent=cv==='yr'?fmt(monthly)+' every month':fmt(annual)+' every year';
+  document.getElementById('rc').textContent=deals>=.5?`That's roughly ${fmtD(deals)} closing${deals>=1.5?'s':''}/yr going to whoever answered first.`:'';
+  document.getElementById('rd').textContent=fmtD(deals);
+  document.getElementById('rm').textContent=missed.toLocaleString();
+  document.getElementById('rrn').textContent=cv==='yr'?fmt(recA):fmt(recM);
+  document.getElementById('rrh').textContent=cv==='yr'?fmt(recM)+'/mo':fmt(recA)+'/yr';
+}
+calc();
+
+// ── SCROLL REVEAL (3D page-turn) ──
+const rvEls=document.querySelectorAll('.rv');
+const obs=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting)e.target.classList.add('in');});},{threshold:.1,rootMargin:'0px 0px -20px 0px'});
+rvEls.forEach(el=>obs.observe(el));
+</script>
+</body>
+</html>
